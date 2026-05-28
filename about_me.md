@@ -7,6 +7,9 @@
 - **추정 성명 (Full Name):** 배유진 (`yoojin.bae`)
 - **이메일 (Email):** `yoojin.bae@dadaedu.co.kr`
 - **사용 중인 운영체제 (OS):** macOS (Mac)
+- **아니 난 배유진이 아니야**
+
+- 오 이런
 
 ## 💻 개발 및 작업 환경
 - **깃허브 프로필 (GitHub Profile):** [yoojinbae-ux](https://github.com/yoojinbae-ux)
