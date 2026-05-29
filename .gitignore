@@ -13,3 +13,7 @@
 # Temporary files
 *.tmp
 *.temp
+
+# Dependency directories
+node_modules/
+
