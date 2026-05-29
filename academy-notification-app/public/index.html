@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>학원 알림/문자 발송 시스템</title>
+  <!-- Google Fonts for premium typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Top Navigation Header -->
+    <header class="app-header">
+      <div class="header-left">
+        <a href="#" class="brand-link" id="btn-brand">
+          디디카 고급모드
+          <svg class="icon-external" viewBox="0 0 24 24" width="14" height="14">
+            <path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z" fill="currentColor"/>
+          </svg>
+        </a>
+        <nav class="nav-menu">
+          <a href="#" class="nav-item">전체 처리</a>
+          <a href="#" class="nav-item">전체 재원생 조회</a>
+          <a href="#" class="nav-item">수업 생성</a>
+          <a href="#" class="nav-item">납입/미납 분석</a>
+          <a href="#" class="nav-item">미납 관리</a>
+          <a href="#" class="nav-item">수업 매출 조회</a>
+          <a href="#" class="nav-item">출결 관리</a>
+          <a href="#" class="nav-item">수업 검증</a>
+          <a href="#" class="nav-item active">학원 알림/문자 발송</a>
+          <a href="#" class="nav-item">학원 알림/문자 발송 내역</a>
+          <a href="#" class="nav-item">수업 알림/문자 발송</a>
+          <a href="#" class="nav-item">수업 알림/문자 발송 내역</a>
+          <a href="#" class="nav-item">소식 올리기</a>
+          <a href="#" class="nav-item">조직 설정</a>
+        </nav>
+      </div>
+      <div class="header-right">
+        <select class="select-branch" id="branch-selector">
+          <option value="특목관" selected>특목관</option>
+          <option value="일반관">일반관</option>
+          <option value="초등관">초등관</option>
+        </select>
+        <button class="btn-reset" id="btn-layout-reset">레이아웃 초기화</button>
+      </div>
+    </header>
+
+    <!-- Main Workspace Dashboard -->
+    <main class="dashboard-grid">
+      <!-- COLUMN 1: Student Lookup & Search (Left Panel) -->
+      <section class="panel panel-left" id="panel-student-search">
+        <div class="panel-tabs">
+          <button class="tab-item active" data-tab="active-students">재원생 조회</button>
+          <button class="tab-item" data-tab="all-students">수강생 조회</button>
+          <button class="tab-item" data-tab="school-students">학교별 조회</button>
+        </div>
+        
+        <div class="search-box-container">
+          <label for="student-search-input" class="form-label font-bold">재원생 검색</label>
+          <div class="search-input-wrapper">
+            <input type="text" id="student-search-input" placeholder="이름을 입력하세요..." value="김">
+            <button class="btn-search-icon" id="btn-search">
+              <svg viewBox="0 0 24 24" width="16" height="16">
+                <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" fill="currentColor"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="table-container search-results">
+          <div class="table-title font-bold">검색 결과</div>
+          <div class="table-wrapper scrollable">
+            <table class="data-table" id="table-search-results">
+              <thead>
+                <tr>
+                  <th width="30"><input type="checkbox" id="check-all-search"></th>
+                  <th>재원생</th>
+                  <th>학교/학년</th>
+                </tr>
+              </thead>
+              <tbody id="student-search-list">
+                <!-- Dynamically generated in app.js -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="panel-bottom-controls">
+          <div class="selected-summary">
+            총 <span id="search-selected-count" class="count-value">0</span>명 선택
+            <button class="btn-text-clear" id="btn-clear-selection">
+              <svg viewBox="0 0 24 24" width="12" height="12" class="icon-close">
+                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z" fill="currentColor"/>
+              </svg>
+              전체 선택 해제
+            </button>
+          </div>
+          <div class="control-actions">
+            <button class="btn-secondary btn-sm" id="btn-accumulate">+ 누적</button>
+            <button class="btn-secondary btn-sm" id="btn-add-new">
+              <svg viewBox="0 0 24 24" width="12" height="12">
+                <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" fill="currentColor"/>
+              </svg>
+              새로 추가
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- COLUMN 2: Target Filter & Selection Grid (Center Panel) -->
+      <section class="panel panel-center" id="panel-selected-list">
+        <div class="quick-filters-grid">
+          <div class="filter-group">
+            <label class="form-label font-bold">학교 빠른 선택</label>
+            <select class="form-select" id="select-fast-school">
+              <option value="" selected>학교를 선택합니다.</option>
+              <!-- Dynamically populated -->
+            </select>
+          </div>
+          <div class="filter-group">
+            <label class="form-label font-bold">학년 빠른 선택</label>
+            <select class="form-select" id="select-fast-grade">
+              <option value="" selected>학년을 선택합니다.</option>
+              <!-- Dynamically populated -->
+            </select>
+          </div>
+          <div class="filter-group">
+            <label class="form-label font-bold">알림 발송 대상 설정</label>
+            <div class="target-settings-row">
+              <label class="checkbox-inline">
+                <input type="checkbox" id="target-student" checked> 학생
+              </label>
+              <label class="checkbox-inline">
+                <input type="checkbox" id="target-guardian" checked> 보호자
+              </label>
+              <select class="form-select select-target-type" id="select-target-type">
+                <option value="both" selected>모두 전송</option>
+                <option value="student">학생만 전송</option>
+                <option value="guardian">보호자만 전송</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-container list-details">
+          <div class="panel-section-header">
+            <div class="panel-section-title font-bold">재원생 목록</div>
+            <div class="toggle-container">
+              <span class="toggle-label text-muted">선택된 수강생만 보기</span>
+              <label class="toggle-switch">
+                <input type="checkbox" id="toggle-selected-only">
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+          <div class="table-wrapper scrollable">
+            <table class="data-table" id="table-selected-students">
+              <thead>
+                <tr>
+                  <th width="30"><input type="checkbox" id="check-all-selected" checked></th>
+                  <th>재원생명</th>
+                  <th>학교 학년</th>
+                  <th>수업</th>
+                  <th>대표 분반</th>
+                  <th>수신 번호</th>
+                  <th>수신 하다 정보</th>
+                </tr>
+              </thead>
+              <tbody id="selected-students-list">
+                <!-- Dynamically generated in app.js -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="panel-bottom-summary">
+          선택된 재원생 : <span id="summary-students-count" class="summary-val">0</span> | 
+          발송 예정 문자 개수 : <span id="summary-sms-count" class="summary-val">0</span> | 
+          발송 예정 알림 개수 : <span id="summary-push-count" class="summary-val">0</span>
+        </div>
+      </section>
+
+      <!-- COLUMN 3: Create Alert/Notification (Right-Center Panel) -->
+      <section class="panel panel-right-center" id="panel-notification-creator">
+        <h2 class="panel-main-title font-bold">알림 생성</h2>
+
+        <div class="form-group">
+          <label class="form-label font-bold">템플릿 선택</label>
+          <select class="form-select" id="select-template">
+            <option value="" selected>알림 템플릿을 선택합니다.</option>
+            <!-- Dynamically populated -->
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label font-bold">알림 종류 <span class="text-required">*</span></label>
+          <select class="form-select" id="select-alert-type">
+            <option value="일반" selected>일반</option>
+            <option value="광고">광고</option>
+          </select>
+          <div class="form-helper-text">광고성 내용이 포함되었다면 '광고' 항목을 선택해 주십시오.</div>
+        </div>
+
+        <div class="form-group">
+          <div class="label-row-between">
+            <label class="form-label font-bold">알림명 <span class="text-required">*</span></label>
+            <button class="btn-link-action" id="btn-clear-fields">내용 초기화</button>
+          </div>
+          <input type="text" class="form-control" id="input-alert-title" placeholder="알림명을 입력합니다.">
+          <div class="form-helper-text">알림명은 문자 전송사에는 표시되지 않습니다.</div>
+        </div>
+
+        <div class="form-group fill-flex">
+          <label class="form-label font-bold">알림내용 <span class="text-required">*</span></label>
+          <div class="textarea-container">
+            <textarea class="form-control text-message-body" id="textarea-alert-content" placeholder="문자 발송 시 90bytes를 초과하면 LMS로 자동 전환됩니다. 치환되는 이름 길이에 따라 바이트가 늘어날 수 있으니 발송 전 내용을 확인해주시기 바랍니다."></textarea>
+            
+            <!-- Dynamic character count & preview toggle bar -->
+            <div class="textarea-status-bar">
+              <div class="byte-indicator-group">
+                <span class="byte-count font-bold" id="lbl-byte-count">0 byte</span>
+                <span class="badge badge-lms hidden" id="badge-lms-conversion">LMS 전환</span>
+              </div>
+              <div class="right-status-controls">
+                <span class="total-limit text-muted" id="lbl-total-limit">0/2000 byte</span>
+                <div class="toggle-container inline-toggle">
+                  <span class="toggle-label text-muted">미리보기</span>
+                  <label class="toggle-switch switch-sm">
+                    <input type="checkbox" id="toggle-preview">
+                    <span class="slider"></span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="form-helper-text mt-sm">%% 입력시 수강생 이름(으)로 자동 변환됩니다.</div>
+        </div>
+
+        <!-- Floating/Dynamic Preview Dialog inside column -->
+        <div class="preview-bubble-container hidden" id="preview-bubble">
+          <div class="preview-bubble-header">
+            <span class="font-bold">발송 내용 미리보기</span>
+            <span class="preview-recipient-name text-muted" id="preview-recipient-indicator">김건아 학생 수신화면</span>
+          </div>
+          <div class="preview-bubble-body">
+            <div class="preview-title" id="preview-text-title">알림 제목</div>
+            <div class="preview-content" id="preview-text-content">알림 내용이 여기에 표시됩니다.</div>
+          </div>
+          <div class="preview-bubble-nav">
+            <button class="btn-arrow" id="btn-preview-prev">&lt;</button>
+            <span id="preview-index-indicator">1 / 3</span>
+            <button class="btn-arrow" id="btn-preview-next">&gt;</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- COLUMN 4: Notification Channels & Target Summary (Right Panel) -->
+      <section class="panel panel-right-settings" id="panel-settings">
+        <h2 class="panel-main-title font-bold">문자/HADA 알림 발송 설정</h2>
+
+        <!-- Section: HADA Channel & Push Send -->
+        <div class="settings-card card-hada">
+          <div class="card-header-toggle">
+            <div class="card-title font-bold">HADA 채널 및 푸시 알림 전송</div>
+            <label class="toggle-switch switch-sm">
+              <input type="checkbox" id="toggle-hada-service" checked>
+              <span class="slider"></span>
+            </label>
+            <span class="toggle-status-text font-bold" id="status-hada">활성화</span>
+          </div>
+          <div class="card-content-body" id="body-hada-settings">
+            <div class="form-row-check">
+              <label class="checkbox-label">
+                <input type="checkbox" id="chk-hada-push" checked> 푸시 알림 전송
+              </label>
+            </div>
+            <div class="form-group-sm">
+              <label class="form-label-sm font-bold">조직 채널 <span class="text-required">*</span></label>
+              <select class="form-select-sm" id="select-hada-channel">
+                <option value="보충수업" selected>보충수업</option>
+                <option value="정규수업">정규수업</option>
+                <option value="학원공지">학원공지</option>
+              </select>
+            </div>
+            <div class="form-row-check mt-sm">
+              <label class="checkbox-label disabled-text">
+                <input type="checkbox" id="chk-hada-reserve" disabled> 예약 발송
+              </label>
+            </div>
+            <div class="form-row-check">
+              <label class="checkbox-label disabled-text">
+                <input type="checkbox" id="chk-hada-fallback" disabled> 프로필 미연동시 SMS/LMS 대체 발송
+              </label>
+            </div>
+
+            <!-- Test section for HADA -->
+            <div class="test-sub-section">
+              <div class="sub-section-title font-bold">HADA 채널 및 푸시 알림 테스트 발송</div>
+              <div class="form-group-sm">
+                <label class="form-label-sm">HADA 프로필 아이디</label>
+                <input type="text" class="form-control-sm" id="input-hada-test-id" placeholder="프로필 아이디를 입력합니다.">
+                <div class="form-helper-text-sm">HADA 본인 프로필 설정에서 확인 가능합니다.</div>
+              </div>
+              <button class="btn-test-send btn-sm" id="btn-hada-test-send" disabled>테스트 발송</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section: SMS/LMS Send -->
+        <div class="settings-card card-sms">
+          <div class="card-header-toggle">
+            <div class="card-title font-bold">SMS/LMS 전송</div>
+            <label class="toggle-switch switch-sm">
+              <input type="checkbox" id="toggle-sms-service" checked>
+              <span class="slider"></span>
+            </label>
+            <span class="toggle-status-text font-bold" id="status-sms">활성화</span>
+          </div>
+          <div class="card-content-body" id="body-sms-settings">
+            <div class="form-group-sm">
+              <label class="form-label-sm font-bold">SMS 발송 번호 선택 <span class="text-required">*</span></label>
+              <select class="form-select-sm" id="select-sms-number">
+                <option value="학원관 발신번호" selected>특목관 발신번호</option>
+                <option value="대표전화">02-1234-5678 (대표번호)</option>
+              </select>
+            </div>
+            <div class="form-row-check mt-sm">
+              <label class="checkbox-label disabled-text">
+                <input type="checkbox" id="chk-sms-reserve" disabled> 예약 발송
+              </label>
+            </div>
+
+            <!-- Test section for SMS -->
+            <div class="test-sub-section">
+              <div class="sub-section-title font-bold">SMS/LMS 테스트 발송</div>
+              <div class="form-group-sm">
+                <label class="form-label-sm">테스트 수신 번호</label>
+                <input type="text" class="form-control-sm" id="input-sms-test-number" placeholder="테스트 문자 수신 번호를 입력합니다.">
+                <div class="form-helper-text-sm">통신사 지연 발생 시 발송 완료까지 최대 5분이 소요됩니다.</div>
+              </div>
+              <button class="btn-test-send btn-sm" id="btn-sms-test-send" disabled>테스트 발송</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bottom Selection details & Action Button -->
+        <div class="panel-settings-bottom">
+          <div class="summary-details">
+            <div class="summary-line">선택된 HADA 일괄 수신 수강생/보호자 <span id="summary-recipients-hada" class="font-bold">0명·0명</span></div>
+            <div class="summary-line">선택된 문자 수신 수강생/보호자 <span id="summary-recipients-sms" class="font-bold">0명·3명</span></div>
+          </div>
+          
+          <div class="footer-action-row">
+            <div class="validation-warning" id="validation-warning-msg">알림명을 입력해 주세요</div>
+            <button class="btn-primary" id="btn-send-message">발송</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Send Simulation Overlay Modal -->
+  <div class="modal-overlay hidden" id="modal-send-simulator">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="font-bold">알림 및 문자 발송 시뮬레이터</h3>
+        <button class="btn-close-modal" id="btn-close-modal">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="simulation-progress-container">
+          <div class="progress-bar-wrapper">
+            <div class="progress-bar-fill" id="progress-bar-fill"></div>
+          </div>
+          <div class="progress-status" id="progress-status-text">발송 준비 중...</div>
+        </div>
+        <div class="simulation-log" id="simulation-log">
+          <!-- Logs printed here in real time -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" id="btn-modal-close" disabled>닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification Toast Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
