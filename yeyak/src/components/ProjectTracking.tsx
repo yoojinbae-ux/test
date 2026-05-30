@@ -2,10 +2,9 @@ import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { format, addDays, differenceInCalendarDays, parseISO, startOfDay } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import {
-  Plus, Trash2, Edit2, X, CheckSquare, FileText, ChevronRight, ChevronDown,
-  Users, Calendar as CalendarIcon, MapPin, Clock, Check
+  Plus, Trash2, Edit2, X, CheckSquare, FileText, ChevronRight, Check
 } from 'lucide-react';
-import { Project, ProjectPhase, ProjectNote, Reservation, db, TEAM_MEMBERS, ALL_PARTICIPANTS } from '../lib/db';
+import { Project, ProjectPhase, ProjectNote, Reservation, db, ALL_PARTICIPANTS } from '../lib/db';
 import { getTeamColorClass, getTeamGanttColors } from '../lib/index';
 
 const DAY_WIDTH = 28; // pixels per day column
@@ -35,6 +34,15 @@ const STATUS_LABELS: Record<string, string> = {
   in_progress: '진행 중',
   completed: '완료'
 };
+
+type LogTab = 'all' | 'meeting' | 'note' | 'todo';
+
+const LOG_TABS: { id: LogTab; label: string }[] = [
+  { id: 'all', label: '전체로그' },
+  { id: 'meeting', label: '회의' },
+  { id: 'note', label: '메모' },
+  { id: 'todo', label: '투두' }
+];
 
 // ─── Sub-components ────────────────────────────────────────────────────────
 
@@ -121,6 +129,7 @@ export const ProjectTracking: React.FC = () => {
 
   const [showCompleted, setShowCompleted] = useState(false);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+  const [activeLogTab, setActiveLogTab] = useState<LogTab>('all');
 
   // Project form dialog
   const [projectFormOpen, setProjectFormOpen] = useState(false);
@@ -315,7 +324,6 @@ export const ProjectTracking: React.FC = () => {
 
   // ─── Right sidebar: todos ─────────────────────────────────────
 
-  const todayStr = format(TODAY, 'yyyy-MM-dd');
   const activeTodos = useMemo(() =>
     notes.filter(n => n.kind === 'todo' && n.date && n.items.length > 0 && !n.items.every(it => it.done)),
     [notes]
@@ -339,6 +347,29 @@ export const ProjectTracking: React.FC = () => {
       return bk.localeCompare(ak);
     });
   }, [selectedProjectId, resvsByProject]);
+  const selectedProjectNotes = useMemo(() => {
+    if (!selectedProjectId) return [];
+    return (notesByProject.get(selectedProjectId) || []).slice().sort((a, b) =>
+      (b.date || b.createdAt).localeCompare(a.date || a.createdAt)
+    );
+  }, [selectedProjectId, notesByProject]);
+  const selectedProjectLogs = useMemo(() => {
+    const meetingLogs = selectedProjectResvs.map(r => ({
+      id: r.id,
+      type: 'meeting' as const,
+      date: r.date,
+      reservation: r
+    }));
+    const noteLogs = selectedProjectNotes.map(n => ({
+      id: n.id,
+      type: n.kind,
+      date: n.date || n.createdAt.slice(0, 10),
+      note: n
+    }));
+    return [...meetingLogs, ...noteLogs]
+      .filter(log => activeLogTab === 'all' || log.type === activeLogTab)
+      .sort((a, b) => b.date.localeCompare(a.date));
+  }, [activeLogTab, selectedProjectNotes, selectedProjectResvs]);
 
   // ─── Render ───────────────────────────────────────────────────
 
@@ -547,6 +578,9 @@ export const ProjectTracking: React.FC = () => {
                         const width = Math.max((clampedEnd - clampedStart + 1) * DAY_WIDTH - 2, 8);
                         const label = phase.name.trim() || (projectPhases.length === 0 ? project.name : `일정${phaseIdx + 1}`);
                         const isOngoing = !phase.endDate;
+                        const assigneeText = project.assignees.length > 0
+                          ? `담당자: ${project.assignees.join(', ')}`
+                          : '담당자: 미지정';
 
                         return (
                           <div
@@ -556,7 +590,7 @@ export const ProjectTracking: React.FC = () => {
                             }`}
                             style={{ top: barTop, height: barHeight, left, width }}
                             onClick={() => setSelectedProjectId(project.id)}
-                            title={`${label}${isOngoing ? ' · 진행중' : ''}`}
+                            title={`${label}${isOngoing ? ' · 진행중' : ''}\n${assigneeText}`}
                           >
                             <span className="text-[10px] font-semibold truncate text-foreground">
                               {label}{isOngoing ? ' · 진행중' : ''}
@@ -570,8 +604,6 @@ export const ProjectTracking: React.FC = () => {
                         const off = dayOffset(r.date);
                         if (off < 0 || off >= allDays.length) return null;
                         const left = off * DAY_WIDTH + 4;
-                        const markerTop = 4;
-
                         return (
                           <div
                             key={r.id}
@@ -749,7 +781,7 @@ export const ProjectTracking: React.FC = () => {
             <div className="border-t pt-2 space-y-1">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold text-muted-foreground">
-                  메모 / 투두 ({(notesByProject.get(selectedProject.id) || []).length})
+                  메모 / 투두 ({selectedProjectNotes.length})
                 </span>
                 <div className="flex gap-2">
                   <button onClick={() => setAddingNote('note')}
@@ -800,18 +832,60 @@ export const ProjectTracking: React.FC = () => {
                 </div>
               )}
 
-              <ul className="space-y-1.5 max-h-52 overflow-y-auto">
-                {(notesByProject.get(selectedProject.id) || [])
-                  .slice().sort((a, b) => (b.date || b.createdAt).localeCompare(a.date || a.createdAt))
-                  .map(n => (
-                    <li key={n.id} className="border rounded-md p-2 text-xs space-y-1">
+            </div>
+
+            {/* Project logs */}
+            <div className="border-t pt-2 space-y-2">
+              <div className="grid grid-cols-4 gap-1 rounded-lg bg-muted p-1">
+                {LOG_TABS.map(tab => {
+                  const count = tab.id === 'all'
+                    ? selectedProjectResvs.length + selectedProjectNotes.length
+                    : tab.id === 'meeting'
+                    ? selectedProjectResvs.length
+                    : selectedProjectNotes.filter(n => n.kind === tab.id).length;
+                  return (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      onClick={() => setActiveLogTab(tab.id)}
+                      className={`rounded-md px-1.5 py-1 text-[11px] font-semibold transition ${
+                        activeLogTab === tab.id
+                          ? 'bg-card text-foreground shadow-sm'
+                          : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      {tab.label} {count}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <ul className="space-y-1.5 max-h-72 overflow-y-auto">
+                {selectedProjectLogs.map(log => {
+                  if (log.type === 'meeting') {
+                    const r = log.reservation;
+                    return (
+                      <li key={log.id} className="flex items-start gap-2 px-2 py-2 text-xs border rounded-md">
+                        <span className={`w-1.5 h-1.5 rounded-full mt-1 shrink-0 ${getTeamColorClass(r.teams[0] || '기타')}`} />
+                        <div className="min-w-0 flex-1">
+                          <div className="font-semibold truncate">{r.date} {formatTime(r.startHour, r.startMinute)}-{formatTime(r.endHour, r.endMinute)}</div>
+                          <div className="truncate">{r.purpose}</div>
+                          <div className="text-muted-foreground truncate">{r.room}{r.teams.length > 0 ? ` · ${r.teams.join(', ')}` : ''}</div>
+                        </div>
+                      </li>
+                    );
+                  }
+
+                  const n = log.note;
+                  return (
+                    <li key={log.id} className="border rounded-md p-2 text-xs space-y-1">
                       <div className="flex items-center gap-1.5">
                         {n.kind === 'todo'
                           ? <CheckSquare className="w-3 h-3 text-primary shrink-0" />
                           : <FileText className="w-3 h-3 text-amber-600 shrink-0" />
                         }
-                        <span className="font-medium truncate flex-1">{n.title || (n.kind === 'todo' ? '투두' : '메모')}</span>
-                        {n.date && <span className="text-muted-foreground shrink-0">{n.date}</span>}
+                        <span className="font-semibold truncate flex-1">{n.title || (n.kind === 'todo' ? '투두' : '메모')}</span>
+                        <span className="text-muted-foreground shrink-0">{log.date}</span>
                         <button onClick={() => deleteNote(n.id)} className="text-muted-foreground hover:text-destructive p-0.5">
                           <X className="w-3 h-3" />
                         </button>
@@ -821,28 +895,15 @@ export const ProjectTracking: React.FC = () => {
                       )}
                       {n.kind === 'todo' && <TodoItems note={n} onChanged={load} />}
                     </li>
-                  ))
-                }
+                  );
+                })}
+                {selectedProjectLogs.length === 0 && (
+                  <li className="text-xs text-muted-foreground py-4 text-center border rounded-md">
+                    표시할 로그가 없습니다.
+                  </li>
+                )}
               </ul>
             </div>
-
-            {/* Linked reservations */}
-            {selectedProjectResvs.length > 0 && (
-              <div className="border-t pt-2 space-y-1">
-                <h4 className="text-xs font-semibold text-muted-foreground">연결된 회의 ({selectedProjectResvs.length})</h4>
-                <ul className="space-y-1 max-h-40 overflow-y-auto">
-                  {selectedProjectResvs.map(r => (
-                    <li key={r.id} className="flex items-start gap-2 px-2 py-1.5 text-xs border rounded-md">
-                      <span className={`w-1.5 h-1.5 rounded-full mt-1 shrink-0 ${getTeamColorClass(r.teams[0] || '기타')}`} />
-                      <div className="min-w-0">
-                        <div className="font-medium truncate">{r.date} {formatTime(r.startHour, r.startMinute)}-{formatTime(r.endHour, r.endMinute)}</div>
-                        <div className="text-muted-foreground truncate">{r.purpose}</div>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
           </div>
         )}
       </aside>

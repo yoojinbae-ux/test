@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { X, Plus, Repeat, ChevronDown } from 'lucide-react';
-import { format, addDays, parseISO, isWeekend } from 'date-fns';
+import React, { useState, useEffect } from 'react';
+import { X, Repeat, ChevronDown } from 'lucide-react';
+import { format, addDays, parseISO } from 'date-fns';
 import { Reservation, Project, db, TEAM_MEMBERS, ALL_PARTICIPANTS } from '../lib/db';
 import { getTeamColorClass } from '../lib/index';
 
@@ -12,13 +12,6 @@ interface ReservationModalProps {
 }
 
 const TEAMS = ['전체', 'C레벨', 'FE', 'BE', 'APP', 'EVE'];
-const HOURS = Array.from({ length: 25 }, (_, i) => {
-  const h = Math.floor(i / 2) + 8;
-  const m = i % 2 === 0 ? 0 : 30;
-  if (h > 20 || (h === 20 && m > 0)) return null;
-  return { h, m };
-}).filter(Boolean) as { h: number; m: number }[];
-
 const TIME_OPTIONS: { label: string; h: number; m: number }[] = [];
 for (let h = 8; h <= 20; h++) {
   for (let m = 0; m < 60; m += 5) {
@@ -32,15 +25,9 @@ for (let h = 8; h <= 20; h++) {
 }
 
 const WEEKDAYS = ['월', '화', '수', '목', '금'];
-const WEEKDAY_VALUES = [1, 2, 3, 4, 5]; // Mon=1, Fri=5 using getDay() convention adjusted
 
 function toTimeKey(h: number, m: number) {
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-}
-
-function getWeekdayIndex(date: Date): number {
-  const d = date.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
-  return d; // 1=Mon, 2=Tue, ..., 5=Fri
 }
 
 export const ReservationModal: React.FC<ReservationModalProps> = ({
