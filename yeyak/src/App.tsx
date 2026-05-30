@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { format, addWeeks, subWeeks, startOfWeek } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { CalendarDays, FolderKanban, Plus, ChevronLeft, ChevronRight, FileDown } from 'lucide-react';

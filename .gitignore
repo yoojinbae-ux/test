@@ -17,3 +17,5 @@
 # Dependency directories
 node_modules/
 
+# Separate repositories
+yeyak-db/

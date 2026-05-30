@@ -57,6 +57,8 @@ export interface ProjectNote {
   updatedAt: string;
 }
 
+type SupabaseUpdates = Record<string, string | string[] | number | null>;
+
 // Fixed team dictionary
 export const TEAM_MEMBERS: Record<string, string[]> = {
   전체: ['김명훈', '박지호', '김재진', '최우석', '이창욱', '김민성', '류주헌', '김윤하', '임성수', '배유진', '박성헌'],
@@ -386,7 +388,7 @@ export const db = {
 
   async updateProject(id: string, fields: Partial<Project>): Promise<boolean> {
     if (supabase) {
-      const updates: Record<string, any> = {};
+      const updates: SupabaseUpdates = {};
       if (fields.name !== undefined) updates.name = fields.name;
       if (fields.startDate !== undefined) updates.start_date = fields.startDate;
       if (fields.endDate !== undefined) updates.end_date = fields.endDate;
@@ -401,7 +403,7 @@ export const db = {
       return true;
     } else {
       initializeLocalStorage();
-      let list = JSON.parse(localStorage.getItem('yeyak_projects') || '[]');
+      const list = JSON.parse(localStorage.getItem('yeyak_projects') || '[]');
       const idx = list.findIndex((p: Project) => p.id === id);
       if (idx === -1) return false;
       const updated = {
@@ -534,7 +536,7 @@ export const db = {
       return true;
     } else {
       initializeLocalStorage();
-      let list = JSON.parse(localStorage.getItem('yeyak_reservations') || '[]');
+      const list = JSON.parse(localStorage.getItem('yeyak_reservations') || '[]');
       const idx = list.findIndex((r: Reservation) => r.id === id);
       if (idx === -1) return false;
       list[idx].attendance = attendance;
@@ -595,7 +597,7 @@ export const db = {
 
   async updateProjectPhase(id: string, fields: Partial<ProjectPhase>): Promise<boolean> {
     if (supabase) {
-      const updates: Record<string, any> = {};
+      const updates: SupabaseUpdates = {};
       if (fields.name !== undefined) updates.name = fields.name;
       if (fields.startDate !== undefined) updates.start_date = fields.startDate;
       if (fields.endDate !== undefined) updates.end_date = fields.endDate;
@@ -605,7 +607,7 @@ export const db = {
       return true;
     } else {
       initializeLocalStorage();
-      let list = JSON.parse(localStorage.getItem('yeyak_phases') || '[]');
+      const list = JSON.parse(localStorage.getItem('yeyak_phases') || '[]');
       const idx = list.findIndex((p: ProjectPhase) => p.id === id);
       if (idx === -1) return false;
       list[idx] = { ...list[idx], ...fields };
@@ -694,7 +696,7 @@ export const db = {
       return true;
     } else {
       initializeLocalStorage();
-      let list = JSON.parse(localStorage.getItem('yeyak_notes') || '[]');
+      const list = JSON.parse(localStorage.getItem('yeyak_notes') || '[]');
       const idx = list.findIndex((n: ProjectNote) => n.id === id);
       if (idx === -1) return false;
       list[idx].items = items;
