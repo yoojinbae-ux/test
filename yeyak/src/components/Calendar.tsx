@@ -194,7 +194,7 @@ export const Calendar: React.FC<CalendarProps> = ({
                         onClick={() => setSelectedResvId(r.id)}
                         className={`absolute rounded-md px-2 py-1.5 text-left border overflow-hidden flex flex-col justify-between transition-all hover:brightness-95 hover:shadow-sm z-10 ${getTeamColorClass(
                           r.teams[0] || '기타'
-                        )} bg-opacity-35`}
+                        )}`}
                         style={{
                           top: `${topOffset + 2}px`,
                           height: `${Math.max(durationHeight - 4, 24)}px`,

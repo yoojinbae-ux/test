@@ -41,13 +41,13 @@ export default {
           foreground: "hsl(var(--card-foreground))",
         },
         team: {
-          all: "#a78bfa",      // Purple (전체)
-          clevel: "#c7d2fe",   // Lavender (C레벨)
-          fe: "#fdba74",       // Orange (FE)
-          be: "#86efac",       // Green (BE)
-          app: "#7dd3fc",      // Sky Blue (APP)
-          eve: "#67e8f9",      // Cyan (EVE)
-          custom: "#fbcfe8"    // Pink (기타)
+          all: "#B56ADB",
+          clevel: "#8D6AD8",
+          fe: "#F5B451",
+          be: "#4DCA7C",
+          app: "#2FCBB8",
+          eve: "#5CB8DE",
+          custom: "#E85D76"
         }
       },
       borderRadius: {
