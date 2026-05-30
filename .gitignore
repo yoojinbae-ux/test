@@ -13,3 +13,6 @@
 # Temporary files
 *.tmp
 *.temp
+
+# Separate repositories
+yeyak-db/
